@@ -3,6 +3,7 @@ from pygame.locals import *
 from sys import exit
 import os
 from random import randrange, choice
+import json  # Importando o módulo json para salvar e carregar o HighScore
 
 pygame.init()
 pygame.mixer.init()
@@ -33,8 +34,25 @@ colidiu = False
 escolha_obstaculo = choice([0, 1])
 
 pontos = 0
-
 velocidade_jogo = 10
+
+# Definir o arquivo JSON para salvar o HighScore
+arquivo_highscore = os.path.join(diretorio_principal, 'highscore.json')
+
+# Função para carregar o HighScore do arquivo JSON
+def carregar_highscore():
+    if os.path.exists(arquivo_highscore):
+        with open(arquivo_highscore, 'r') as f:
+            return json.load(f).get('highscore', 0)
+    return 0
+
+# Função para salvar o HighScore no arquivo JSON
+def salvar_highscore(highscore):
+    with open(arquivo_highscore, 'w') as f:
+        json.dump({'highscore': highscore}, f)
+
+# Carregar o HighScore ao iniciar o jogo
+highscore = carregar_highscore()
 
 def exibe_mensagem(msg, tamanho, cor):
     fonte = pygame.font.SysFont('comicsansms', tamanho, True, False)
@@ -232,6 +250,11 @@ while True:
         restart = exibe_mensagem('Pressione r para reiniciar', 20, (0,0,0))
         tela.blit(restart, (LARGURA//2, (ALTURA//2) + 60))
 
+        # Verificar se a pontuação do jogador é maior que o HighScore
+        if pontos > highscore:
+            highscore = pontos
+            salvar_highscore(highscore)  # Atualizar o HighScore no arquivo JSON
+
     else:
         pontos += 1
         todas_as_sprites.update()
@@ -245,5 +268,9 @@ while True:
             velocidade_jogo += 1
         
     tela.blit(texto_pontos, (520, 30))
+
+    # Exibir o HighScore na tela
+    texto_highscore = exibe_mensagem(f"HighScore: {highscore}", 30, (0,0,0))
+    tela.blit(texto_highscore, (20, 30))
 
     pygame.display.flip()
